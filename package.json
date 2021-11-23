@@ -1,0 +1,27 @@
+{
+  "name": "files-to-pdf",
+  "version": "1.0.0",
+  "description": "pass in an array of files and get a PDF",
+  "main": "index.js",
+  "scripts": {
+    "test": "npx jest --watchAll",
+    "build": "tsc",
+    "watch": "npx tsc --w"
+  },
+  "author": "Patrick Gidich",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/image-to-base64": "^2.1.0",
+    "@types/jest": "^27.0.3",
+    "jest": "^27.3.1",
+    "ts-jest": "^27.0.7",
+    "typescript": "^4.5.2"
+  },
+  "dependencies": {
+    "file-type": "^16.5.3",
+    "image-size": "^1.0.0",
+    "image-to-base64": "^2.2.0",
+    "jspdf": "^2.4.0",
+    "pdf-merger-js": "^3.2.1"
+  }
+}
