@@ -1,3 +1,5 @@
+test/temp/**.*
+
 # Logs
 logs
 *.log

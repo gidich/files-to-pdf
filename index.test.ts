@@ -1,10 +1,8 @@
 import { assert } from 'console';
-import {hello,FilesToPdf} from './index';
-test('should say hello world', async() => {
-    expect(hello('world')).toBe('hello world');
-});
+import {FilesToPdf} from './index';
 
-test('should merge pdfs',async() => {
+
+test('should merge pdfs from a given definition',async() => {
     //arrange
     let filesToPdf = new FilesToPdf();
     let files = [
