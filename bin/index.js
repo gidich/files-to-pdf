@@ -1,4 +1,23 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -16,10 +35,11 @@ exports.FilesToPdf = exports.hello = void 0;
 const file_type_1 = __importDefault(require("file-type"));
 const images_to_pdf_1 = require("./code/images-to-pdf");
 const image_js_1 = require("image-js");
+//import ImageColorModel from 'image-js';
 const pdf_merger_js_1 = __importDefault(require("pdf-merger-js"));
 const image_size_1 = __importDefault(require("image-size"));
 const fs_1 = __importDefault(require("fs"));
-const tiff_1 = __importDefault(require("tiff"));
+const tiff = __importStar(require("tiff"));
 const world = 'world';
 function hello(name) {
     return `hello ${name}`;
@@ -28,9 +48,13 @@ exports.hello = hello;
 class FilesToPdf {
     constructor() {
         this.pdfMimeType = 'application/pdf';
-        //private readonly tiffMimeType = 'image/tiff';
+        this.tiffMimeType = 'image/tiff';
+        this.imageTypes = ['image/png',
+            'image/jpeg',
+            'image/gif'];
         this.validMimeTypes = [
             this.pdfMimeType,
+            this.tiffMimeType,
             'image/png',
             'image/jpeg',
             'image/gif'
@@ -38,14 +62,35 @@ class FilesToPdf {
     }
     tiffToJpeg(tiffFile, jpegFile) {
         return __awaiter(this, void 0, void 0, function* () {
+            //let tiffData = tiff.(fs.readFileSync(tiffFile));
             let fileBuffer = fs_1.default.readFileSync(tiffFile);
-            let tiffArray = tiff_1.default.decode(fileBuffer);
+            console.log('file buffer length', fileBuffer.length);
+            let imageList = [];
+            let tiffArray = tiff.decode(fileBuffer.buffer);
             for (let page = 0; page < tiffArray.length; page++) {
-                let loadedImage = yield image_js_1.Image.load(tiffArray[page].data);
-                loadedImage.save(jpegFile + '_' + page + '.jpg');
-                //  let image = new Image(page.data, page.width, page.height, page.bitsPerPixel);
+                let ifd = tiffArray[page];
+                console.log('ifd.bitdepth', ifd.bitsPerSample);
+                /*
+                            let ijs =  new Image(ifd.width, ifd.height, {
+                                // TODO: handle float data
+                                data: ifd.data,
+                                depth: ifd.bitsPerSample
+                              } as ImageConstructorOptions);
+                              */
+                //   let loadedImage = await Image.load(tiffArray[page].data);
+                //   loadedImage.save(jpegFile + '_' + page + '.jpg');
+                //let image = new Image(tiffArray[page].data, tiffArray[page].width, tiffArray[page].height, tiffArray[page].bitsPerPixel);
+                let image = new image_js_1.Image(tiffArray[page].width, tiffArray[page].height, tiffArray[page].data, {
+                    depth: ifd.bitsPerSample,
+                    colorModel: 'RGB',
+                    kind: 'RGB'
+                });
+                let fileName = jpegFile + '_' + page + '.jpg';
+                imageList.push(fileName);
+                yield image.save(fileName);
                 //  image.save(jpegFile);
             }
+            return imageList;
             //let loadedImage = await Image.load(tiffFile);
             //console.log('image data', loadedImage.width, loadedImage.height);
             //return loadedImage.rotateLeft().save(jpegFile);
@@ -70,12 +115,24 @@ class FilesToPdf {
             let pdfCount = 0;
             for (let file of files) {
                 if (mimeTypeMap.get(file) === this.pdfMimeType) { //once we encounter a PDF, we merge all prior Images into a single PDF
-                    yield this.converImagesToTempPDF(imageMergeList, workDir, pdfCount, pdfMergeList);
+                    //   console.log('image merge list-befor render', JSON.stringify(imageMergeList.size));
+                    //  await this.converImagesToTempPDF(imageMergeList, workDir, pdfCount, pdfMergeList);
                     pdfCount++;
                     pdfMergeList.push(file);
                 }
+                else if (mimeTypeMap.get(file) === this.tiffMimeType) {
+                    let imageList = yield this.tiffToJpeg(file, workDir + '/converted_tiff_' + pdfCount);
+                    console.log('image list', JSON.stringify(imageList));
+                    for (let image of imageList) {
+                        console.log('image', image);
+                        imageMergeList.set(image, 'image/jpeg');
+                        yield this.converImagesToTempPDF(imageMergeList, workDir, pdfCount, pdfMergeList);
+                    }
+                    console.log('image merge list', JSON.stringify(imageMergeList.size));
+                }
                 else if (mimeTypeMap.get(file)) {
                     imageMergeList.set(file, mimeTypeMap.get(file));
+                    yield this.converImagesToTempPDF(imageMergeList, workDir, pdfCount, pdfMergeList);
                 }
             }
             yield this.converImagesToTempPDF(imageMergeList, workDir, pdfCount, pdfMergeList);
@@ -130,6 +187,7 @@ class FilesToPdf {
                 for (let [file, mimeType] of imageMergeList) {
                     images.push(yield this.convertToImageDetails(file, mimeType));
                 }
+                console.log('images to convert', JSON.stringify(images.length));
                 yield (0, images_to_pdf_1.generatePdfFromImages)(images, pdfName);
                 pdfMergeList.push(pdfName);
                 imageMergeList.clear();

@@ -56,6 +56,7 @@ export const generatePdfFromImages = async (images : ImageDetails[], pdfname:str
       width: image.width,
       height: image.height,
     });
+    
     doc.addImage(
       image.src,
       image.imageType,
@@ -63,7 +64,9 @@ export const generatePdfFromImages = async (images : ImageDetails[], pdfname:str
       (A4_PAPER_DIMENSIONS.height - imageDimensions.height) / 2,
       imageDimensions.width,
       imageDimensions.height
-    );
+    ).addPage();
   });
+  var pageCount = doc.getNumberOfPages();
+  doc.deletePage(pageCount);
   doc.save(`${pdfname}`);
 }

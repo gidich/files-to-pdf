@@ -18,6 +18,7 @@ test('should merge pdfs', () => __awaiter(void 0, void 0, void 0, function* () {
     //arrange
     let filesToPdf = new index_1.FilesToPdf();
     let files = [
+        './test/sample-files/sample-set-1/408020 \'Carl Gustav Carus\' doc.tif',
         './test/sample-files/sample-set-1/Sample Completed Verification Form.pdf',
         './test/sample-files/sample-set-1/Sample EPIC Report_Final Medical Diploma.pdf',
         './test/sample-files/sample-set-1/Physican Diploma Translation.JPG',
