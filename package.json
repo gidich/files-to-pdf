@@ -19,9 +19,11 @@
   },
   "dependencies": {
     "file-type": "^16.5.3",
+    "image-js": "^0.33.1",
     "image-size": "^1.0.0",
     "image-to-base64": "^2.2.0",
     "jspdf": "^2.4.0",
-    "pdf-merger-js": "^3.2.1"
+    "pdf-merger-js": "^3.2.1",
+    "tiff": "^5.0.3"
   }
 }

@@ -1,8 +1,10 @@
 import FileType from 'file-type';
 import { generatePdfFromImages, ImageDetails } from './code/images-to-pdf';
+import { Image, ImageConstructorOptions } from 'image-js';
 import PDFMerger from 'pdf-merger-js';
 import sizeOf from 'image-size';
 import fs from 'fs';
+import * as tiff from 'tiff';
 const world ='world';
 
 
@@ -22,6 +24,28 @@ export class FilesToPdf {
         'image/png',
         'image/jpeg',
         'image/gif'];
+    
+    public async tiffToJpeg(tiffFile: string, jpegFile: string) : Promise<void> {
+        //let tiffData = tiff.(fs.readFileSync(tiffFile));
+        let fileBuffer = fs.readFileSync(tiffFile);
+        console.log('file buffer length', fileBuffer.length);
+        
+        let tiffArray = tiff.decode(fileBuffer.buffer);
+        for(let page = 0; page < tiffArray.length; page++) {
+         //   let loadedImage = await Image.load(tiffArray[page].data);
+         //   loadedImage.save(jpegFile + '_' + page + '.jpg');
+            //let image = new Image(tiffArray[page].data, tiffArray[page].width, tiffArray[page].height, tiffArray[page].bitsPerPixel);
+            let image = new Image( tiffArray[page].width, tiffArray[page].height, tiffArray[page].data,{
+                type: 'tif',
+
+            } as ImageConstructorOptions);
+            image.save(jpegFile + '_' + page + '.jpg');
+          //  image.save(jpegFile);
+        }
+        //let loadedImage = await Image.load(tiffFile);
+        //console.log('image data', loadedImage.width, loadedImage.height);
+        //return loadedImage.rotateLeft().save(jpegFile);
+    }
 
 
     public async convertFiles(files: string[], workDir: string, outFile: string): Promise<void> {
@@ -50,6 +74,8 @@ export class FilesToPdf {
                 imageMergeList.set(file, mimeTypeMap.get(file) as string);
             }
         }
+
+
         await this.converImagesToTempPDF(imageMergeList, workDir, pdfCount, pdfMergeList);
 
         //merge all PDFs into one

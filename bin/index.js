@@ -15,9 +15,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.FilesToPdf = exports.hello = void 0;
 const file_type_1 = __importDefault(require("file-type"));
 const images_to_pdf_1 = require("./code/images-to-pdf");
+const image_js_1 = require("image-js");
 const pdf_merger_js_1 = __importDefault(require("pdf-merger-js"));
 const image_size_1 = __importDefault(require("image-size"));
 const fs_1 = __importDefault(require("fs"));
+const tiff_1 = __importDefault(require("tiff"));
 const world = 'world';
 function hello(name) {
     return `hello ${name}`;
@@ -33,6 +35,21 @@ class FilesToPdf {
             'image/jpeg',
             'image/gif'
         ];
+    }
+    tiffToJpeg(tiffFile, jpegFile) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let fileBuffer = fs_1.default.readFileSync(tiffFile);
+            let tiffArray = tiff_1.default.decode(fileBuffer);
+            for (let page = 0; page < tiffArray.length; page++) {
+                let loadedImage = yield image_js_1.Image.load(tiffArray[page].data);
+                loadedImage.save(jpegFile + '_' + page + '.jpg');
+                //  let image = new Image(page.data, page.width, page.height, page.bitsPerPixel);
+                //  image.save(jpegFile);
+            }
+            //let loadedImage = await Image.load(tiffFile);
+            //console.log('image data', loadedImage.width, loadedImage.height);
+            //return loadedImage.rotateLeft().save(jpegFile);
+        });
     }
     convertFiles(files, workDir, outFile) {
         var _a;
