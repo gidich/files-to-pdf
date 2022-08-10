@@ -79,6 +79,49 @@ export class FilesToPdf {
         await merger.save(outFile);
     }
 
+    public async convertFilesBuffer(files: string[], workDir: string, outFile: string): Promise<void> {
+        let mimeTypeMap = new Map<string, string>();
+        for (const file of files) {
+            let fileType = await FileType.fromFile(file);
+            mimeTypeMap.set(file, fileType?.mime ?? 'unknown');
+        }
+        for (const [file, mimeType] of mimeTypeMap) {
+            if (!this.validMimeTypes.includes(mimeType)) {
+                throw new Error(`${file} is not a valid file type`);
+            }
+        }
+        //convert each file to PDF, it multiple images in a row, put them together in a single PDF
+        let imageMergeList:Map<string,string> = new Map<string,string>();
+        let pdfMergeList:string[] = [];
+        let pdfCount = 0;
+        for(let file of files) {
+            
+            if(mimeTypeMap.get(file) === this.pdfMimeType) { //once we encounter a PDF, we merge all prior Images into a single PDF
+                await this.converImagesToTempPDF(imageMergeList, workDir, pdfCount, pdfMergeList);
+                pdfCount++;
+                pdfMergeList.push(file);
+            }
+            else if(mimeTypeMap.get(file) === this.tiffMimeType) {
+                let imageList = await this.tiffToJpeg(file, workDir + '/converted_tiff_' + pdfCount);
+                for(let image of imageList) {
+                    imageMergeList.set(image, 'image/jpeg');
+                } 
+            }   
+            else if (mimeTypeMap.get(file)){
+                imageMergeList.set(file, mimeTypeMap.get(file) as string);
+            }
+        }
+
+        await this.converImagesToTempPDF(imageMergeList, workDir, pdfCount, pdfMergeList);
+
+        //merge all PDFs into one
+        let merger = new PDFMerger();
+        for(let pdf of pdfMergeList) {
+            merger.add(pdf);
+        }
+        var bufferedFile = await merger.saveAsBuffer();
+    }
+
     private getImageDetails(file: string): { width: number, height: number } {
         let dimensions = sizeOf(file);
         if (!dimensions) {
