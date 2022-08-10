@@ -18,6 +18,21 @@ test('should merge pdfs from a given definition',async() => {
     assert(true);
 })
 
+test('should merge buffer pdfs from a given definition',async() => {
+    //arrange
+    let filesToPdf = new FilesToPdf();
+    let files = [
+            './test/sample-files/sample-set-1/408020 \'Carl Gustav Carus\' doc.tif',
+            './test/sample-files/sample-set-1/Sample Completed Verification Form.pdf',
+            './test/sample-files/sample-set-1/Sample EPIC Report_Final Medical Diploma.pdf',
+            './test/sample-files/sample-set-1/Physican Diploma Translation.JPG',
+            './test/sample-files/sample-set-1/Verified_Final_Medical_Diploma.pdf'
+    ];
+    //act
+    await filesToPdf.convertFilesBuffer(files, './test/temp', './test/temp/merged.pdf');
+    //assert
+    assert(true);
+})
 
 test('should convert tiffs', async() => {
     //arrange
