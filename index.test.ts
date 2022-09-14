@@ -34,7 +34,7 @@ test('Test2: should merge buffer pdfs from a given definition',async() => {
     assert(true);
 })
 
-test('Test3: should merge buffer input pdfs from a given definition',async() => {
+test('Test3a: should merge buffer input 1 page pdfs from a given definition',async() => {
     //arrange
     let filesToPdf = new FilesToPdf();
     let files = [
@@ -45,7 +45,41 @@ test('Test3: should merge buffer input pdfs from a given definition',async() => 
             './test/sample-files/sample-set-1/Verified_Final_Medical_Diploma.pdf'
     ];
     //act
-    await filesToPdf.convertFilesBufferInput(files, './test/temp', './test/temp/merged3.pdf');
+    await filesToPdf.convertFilesBufferInput(files, './test/temp', './test/temp/merged3a.pdf');
+    //assert
+    assert(true);
+})
+
+test('Test3b: should merge buffer input epic 2 page pdfs from a given definition',async() => {
+    //arrange
+    let filesToPdf = new FilesToPdf();
+    let files = [
+            './test/sample-files/sample-set-1/408020 \'Carl Gustav Carus\' doc.tif',
+            './test/sample-files/sample-set-1/Sample Completed Verification Form.pdf',
+            './test/sample-files/sample-set-1/Sample EPIC Report_Final Medical Diploma.pdf',
+            './test/sample-files/sample-set-1/Physican Diploma Translation.JPG',
+            './test/sample-files/sample-set-1/Verified_Final_Medical_Diploma.pdf',
+            './test/sample-files/sample-set-1/sample 1.pdf'
+    ];
+    //act
+    await filesToPdf.convertFilesBufferInput(files, './test/temp', './test/temp/merged3b.pdf');
+    //assert
+    assert(true);
+})
+
+test('Test3c: should merge buffer input internet 2 page pdfs from a given definition',async() => {
+    //arrange
+    let filesToPdf = new FilesToPdf();
+    let files = [
+            './test/sample-files/sample-set-1/408020 \'Carl Gustav Carus\' doc.tif',
+            './test/sample-files/sample-set-1/Sample Completed Verification Form.pdf',
+            './test/sample-files/sample-set-1/Sample EPIC Report_Final Medical Diploma.pdf',
+            './test/sample-files/sample-set-1/Physican Diploma Translation.JPG',
+            './test/sample-files/sample-set-1/Verified_Final_Medical_Diploma.pdf',
+            './test/sample-files/sample-set-1/sample.pdf'
+    ];
+    //act
+    await filesToPdf.convertFilesBufferInput(files, './test/temp', './test/temp/merged3c.pdf');
     //assert
     assert(true);
 })
