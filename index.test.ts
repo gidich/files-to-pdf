@@ -91,3 +91,20 @@ test('Test4: should convert tiffs', async() => {
     await filesToPdf.tiffToJpeg('./test/sample-files/sample-set-1/649325.tif', './test/temp/649325 Monterrey doc4.jpg');
     assert(true);
 })
+
+test('Test5a: should merge buffer input internet 2 page [1] pdfs from a given definition',async() => {
+    //arrange
+    let filesToPdf = new FilesToPdf();
+    let files = [
+            './test/sample-files/sample-set-1/408020 \'Carl Gustav Carus\' doc.tif',
+            './test/sample-files/sample-set-1/Sample Completed Verification Form.pdf',
+            './test/sample-files/sample-set-1/Sample EPIC Report_Final Medical Diploma.pdf',
+            './test/sample-files/sample-set-1/Physican Diploma Translation.JPG',
+            './test/sample-files/sample-set-1/Verified_Final_Medical_Diploma.pdf',
+            './test/sample-files/sample-set-1/sample.pdf'
+    ];
+    //act
+    await filesToPdf.convertFilesBufferInputPages(files, './test/temp', './test/temp/merged5a.pdf');
+    //assert
+    assert(true);
+})
