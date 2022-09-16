@@ -92,7 +92,7 @@ test('Test4: should convert tiffs', async() => {
     assert(true);
 })
 
-test('Test5a: should merge buffer input internet 2 page [1] pdfs from a given definition',async() => {
+test('Test5a: should merge file buffer input internet 2 page [1] pdfs from a given definition',async() => {
     //arrange
     let filesToPdf = new FilesToPdf();
     let files = [
@@ -105,6 +105,19 @@ test('Test5a: should merge buffer input internet 2 page [1] pdfs from a given de
     ];
     //act
     await filesToPdf.convertFilesBufferInputPages(files, './test/temp', './test/temp/merged5a.pdf');
+    //assert
+    assert(true);
+})
+
+test('Test6a: should merge blob buffer input internet 2 page [1] pdfs from a given definition',async() => {
+    //arrange
+    let filesToPdf = new FilesToPdf();
+    let files = [
+        'Sample Completed Verification Form.pdf',
+        'sample.pdf'
+    ];
+    //act
+    await filesToPdf.convertFilesBlobInput1Page(files, './test/temp/merged6a.pdf');
     //assert
     assert(true);
 })

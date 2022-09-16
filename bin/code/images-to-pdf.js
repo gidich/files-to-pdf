@@ -54,8 +54,10 @@ const generatePdfFromImages = (images, pdfname) => __awaiter(void 0, void 0, voi
             width: image.width,
             height: image.height,
         });
-        doc.addImage(image.src, image.imageType, (A4_PAPER_DIMENSIONS.width - imageDimensions.width) / 2, (A4_PAPER_DIMENSIONS.height - imageDimensions.height) / 2, imageDimensions.width, imageDimensions.height);
+        doc.addImage(image.src, image.imageType, (A4_PAPER_DIMENSIONS.width - imageDimensions.width) / 2, (A4_PAPER_DIMENSIONS.height - imageDimensions.height) / 2, imageDimensions.width, imageDimensions.height).addPage();
     });
+    var pageCount = doc.getNumberOfPages();
+    doc.deletePage(pageCount);
     doc.save(`${pdfname}`);
 });
 exports.generatePdfFromImages = generatePdfFromImages;
