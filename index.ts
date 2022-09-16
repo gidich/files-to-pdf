@@ -5,6 +5,7 @@ import PDFMerger from 'pdf-merger-js';
 import sizeOf from 'image-size';
 import fs from 'fs';
 import * as tiff from 'tiff';
+import { BlobServiceClient } from '@azure/storage-blob';
 
 export class FilesToPdf {
     private readonly pdfMimeType = 'application/pdf';
@@ -259,4 +260,54 @@ export class FilesToPdf {
             imageMergeList.clear();
         }
     }
+
+    async convertFilesBlobInput1Page(files: string[], arg1: string) {
+        // download the files
+        let downloadedFiles: any[] = [];
+        await this.downloadBlobs(files, downloadedFiles);
+
+         // merge the files
+         const merger = new PDFMerger();
+         for (let file of downloadedFiles) {
+             merger.add(file.content, ['1']);
+         }
+         const mergedFile = await merger.saveAsBuffer();
+
+         // save the file to local storage
+        fs.writeFileSync(arg1, mergedFile);
+    }
+
+    // download the files in fileList array from blob storage and save them to the downloadedFiles array
+    async downloadBlobs(fileList: string[], downloadedFiles: any[]) {
+        for (let blobName of fileList) {
+            const containerName = "input-files";
+            // download the file from azure blob storage
+            const blobServiceClient = BlobServiceClient.fromConnectionString("DefaultEndpointsProtocol=https;AccountName=salesforcestorageact;AccountKey=2der/NyZo9xKCwJAhDdwsAZ7mrUVUnp+qR/qkOgpfRhRxEe5GqTYyoq2o0T209wRLvvawa+lcGe6+AStqlQuoQ==;EndpointSuffix=core.windows.net");
+            const containerClient = blobServiceClient.getContainerClient(containerName);
+            const blobClient = containerClient.getBlobClient(blobName);
+
+        // Get blob content from position 0 to the end
+        // In Node.js, get downloaded data by accessing downloadBlockBlobResponse.readableStreamBody
+        const downloadBlockBlobResponse = await blobClient.download();
+        const downloaded = (
+            await streamToBuffer(downloadBlockBlobResponse.readableStreamBody)
+        );
+        downloadedFiles.push({ name: blobName, content: downloaded });
+        }
+    }
+
+
+}
+
+function streamToBuffer(readableStream: any) {
+    return new Promise((resolve, reject) => {
+        const chunks: any = [];
+        readableStream.on("data", (data: WithImplicitCoercion<ArrayBuffer | SharedArrayBuffer>) => {
+            chunks.push(data instanceof Buffer ? data : Buffer.from(data));
+        });
+        readableStream.on("end", () => {
+            resolve(Buffer.concat(chunks));
+        });
+        readableStream.on("error", reject);
+    });
 }

@@ -1,0 +1,8 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "AzureWebJobsStorage": "DefaultEndpointsProtocol=https;AccountName=salesforcestorageact;AccountKey=2der/NyZo9xKCwJAhDdwsAZ7mrUVUnp+qR/qkOgpfRhRxEe5GqTYyoq2o0T209wRLvvawa+lcGe6+AStqlQuoQ==;EndpointSuffix=core.windows.net",
+    "FUNCTIONS_WORKER_RUNTIME": "node",
+    "SalesforceStorage": "DefaultEndpointsProtocol=https;AccountName=salesforcestorageact;AccountKey=2der/NyZo9xKCwJAhDdwsAZ7mrUVUnp+qR/qkOgpfRhRxEe5GqTYyoq2o0T209wRLvvawa+lcGe6+AStqlQuoQ==;EndpointSuffix=core.windows.net"
+  }
+}

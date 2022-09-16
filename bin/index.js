@@ -31,27 +31,19 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.FilesToPdf = exports.hello = void 0;
+exports.FilesToPdf = void 0;
 const file_type_1 = __importDefault(require("file-type"));
 const images_to_pdf_1 = require("./code/images-to-pdf");
 const image_js_1 = require("image-js");
-//import ImageColorModel from 'image-js';
 const pdf_merger_js_1 = __importDefault(require("pdf-merger-js"));
 const image_size_1 = __importDefault(require("image-size"));
 const fs_1 = __importDefault(require("fs"));
 const tiff = __importStar(require("tiff"));
-const world = 'world';
-function hello(name) {
-    return `hello ${name}`;
-}
-exports.hello = hello;
+const storage_blob_1 = __importDefault(require("@azure/storage-blob"));
 class FilesToPdf {
     constructor() {
         this.pdfMimeType = 'application/pdf';
         this.tiffMimeType = 'image/tiff';
-        this.imageTypes = ['image/png',
-            'image/jpeg',
-            'image/gif'];
         this.validMimeTypes = [
             this.pdfMimeType,
             this.tiffMimeType,
@@ -62,24 +54,11 @@ class FilesToPdf {
     }
     tiffToJpeg(tiffFile, jpegFile) {
         return __awaiter(this, void 0, void 0, function* () {
-            //let tiffData = tiff.(fs.readFileSync(tiffFile));
             let fileBuffer = fs_1.default.readFileSync(tiffFile);
-            console.log('file buffer length', fileBuffer.length);
             let imageList = [];
             let tiffArray = tiff.decode(fileBuffer.buffer);
             for (let page = 0; page < tiffArray.length; page++) {
                 let ifd = tiffArray[page];
-                console.log('ifd.bitdepth', ifd.bitsPerSample);
-                /*
-                            let ijs =  new Image(ifd.width, ifd.height, {
-                                // TODO: handle float data
-                                data: ifd.data,
-                                depth: ifd.bitsPerSample
-                              } as ImageConstructorOptions);
-                              */
-                //   let loadedImage = await Image.load(tiffArray[page].data);
-                //   loadedImage.save(jpegFile + '_' + page + '.jpg');
-                //let image = new Image(tiffArray[page].data, tiffArray[page].width, tiffArray[page].height, tiffArray[page].bitsPerPixel);
                 let image = new image_js_1.Image(tiffArray[page].width, tiffArray[page].height, tiffArray[page].data, {
                     depth: ifd.bitsPerSample,
                     colorModel: 'RGB',
@@ -88,12 +67,8 @@ class FilesToPdf {
                 let fileName = jpegFile + '_' + page + '.jpg';
                 imageList.push(fileName);
                 yield image.save(fileName);
-                //  image.save(jpegFile);
             }
             return imageList;
-            //let loadedImage = await Image.load(tiffFile);
-            //console.log('image data', loadedImage.width, loadedImage.height);
-            //return loadedImage.rotateLeft().save(jpegFile);
         });
     }
     convertFiles(files, workDir, outFile) {
@@ -115,24 +90,18 @@ class FilesToPdf {
             let pdfCount = 0;
             for (let file of files) {
                 if (mimeTypeMap.get(file) === this.pdfMimeType) { //once we encounter a PDF, we merge all prior Images into a single PDF
-                    //   console.log('image merge list-befor render', JSON.stringify(imageMergeList.size));
-                    //  await this.converImagesToTempPDF(imageMergeList, workDir, pdfCount, pdfMergeList);
+                    yield this.converImagesToTempPDF(imageMergeList, workDir, pdfCount, pdfMergeList);
                     pdfCount++;
                     pdfMergeList.push(file);
                 }
                 else if (mimeTypeMap.get(file) === this.tiffMimeType) {
                     let imageList = yield this.tiffToJpeg(file, workDir + '/converted_tiff_' + pdfCount);
-                    console.log('image list', JSON.stringify(imageList));
                     for (let image of imageList) {
-                        console.log('image', image);
                         imageMergeList.set(image, 'image/jpeg');
-                        yield this.converImagesToTempPDF(imageMergeList, workDir, pdfCount, pdfMergeList);
                     }
-                    console.log('image merge list', JSON.stringify(imageMergeList.size));
                 }
                 else if (mimeTypeMap.get(file)) {
                     imageMergeList.set(file, mimeTypeMap.get(file));
-                    yield this.converImagesToTempPDF(imageMergeList, workDir, pdfCount, pdfMergeList);
                 }
             }
             yield this.converImagesToTempPDF(imageMergeList, workDir, pdfCount, pdfMergeList);
@@ -142,6 +111,136 @@ class FilesToPdf {
                 merger.add(pdf);
             }
             yield merger.save(outFile);
+        });
+    }
+    convertFilesBuffer(files, workDir, outFile) {
+        var _a;
+        return __awaiter(this, void 0, void 0, function* () {
+            let mimeTypeMap = new Map();
+            for (const file of files) {
+                let fileType = yield file_type_1.default.fromFile(file);
+                mimeTypeMap.set(file, (_a = fileType === null || fileType === void 0 ? void 0 : fileType.mime) !== null && _a !== void 0 ? _a : 'unknown');
+            }
+            for (const [file, mimeType] of mimeTypeMap) {
+                if (!this.validMimeTypes.includes(mimeType)) {
+                    throw new Error(`${file} is not a valid file type`);
+                }
+            }
+            //convert each file to PDF, it multiple images in a row, put them together in a single PDF
+            let imageMergeList = new Map();
+            let pdfMergeList = [];
+            let pdfCount = 0;
+            for (let file of files) {
+                if (mimeTypeMap.get(file) === this.pdfMimeType) { //once we encounter a PDF, we merge all prior Images into a single PDF
+                    yield this.converImagesToTempPDF(imageMergeList, workDir, pdfCount, pdfMergeList);
+                    pdfCount++;
+                    pdfMergeList.push(file);
+                }
+                else if (mimeTypeMap.get(file) === this.tiffMimeType) {
+                    let imageList = yield this.tiffToJpeg(file, workDir + '/converted_tiff_' + pdfCount);
+                    for (let image of imageList) {
+                        imageMergeList.set(image, 'image/jpeg');
+                    }
+                }
+                else if (mimeTypeMap.get(file)) {
+                    imageMergeList.set(file, mimeTypeMap.get(file));
+                }
+            }
+            yield this.converImagesToTempPDF(imageMergeList, workDir, pdfCount, pdfMergeList);
+            //merge all PDFs into one
+            let merger = new pdf_merger_js_1.default();
+            for (let pdf of pdfMergeList) {
+                merger.add(pdf);
+            }
+            var bufferedFile = yield merger.saveAsBuffer();
+        });
+    }
+    convertFilesBufferInput(files, workDir, outFile) {
+        var _a;
+        return __awaiter(this, void 0, void 0, function* () {
+            let mimeTypeMap = new Map();
+            for (const file of files) {
+                let fileType = yield file_type_1.default.fromFile(file);
+                mimeTypeMap.set(file, (_a = fileType === null || fileType === void 0 ? void 0 : fileType.mime) !== null && _a !== void 0 ? _a : 'unknown');
+            }
+            for (const [file, mimeType] of mimeTypeMap) {
+                if (!this.validMimeTypes.includes(mimeType)) {
+                    throw new Error(`${file} is not a valid file type`);
+                }
+            }
+            //convert each file to PDF, it multiple images in a row, put them together in a single PDF
+            let imageMergeList = new Map();
+            let pdfMergeList = [];
+            let pdfCount = 0;
+            for (let file of files) {
+                if (mimeTypeMap.get(file) === this.pdfMimeType) { //once we encounter a PDF, we merge all prior Images into a single PDF
+                    yield this.converImagesToTempPDF(imageMergeList, workDir, pdfCount, pdfMergeList);
+                    pdfCount++;
+                    pdfMergeList.push(file);
+                }
+                else if (mimeTypeMap.get(file) === this.tiffMimeType) {
+                    let imageList = yield this.tiffToJpeg(file, workDir + '/converted_tiff_' + pdfCount);
+                    for (let image of imageList) {
+                        imageMergeList.set(image, 'image/jpeg');
+                    }
+                }
+                else if (mimeTypeMap.get(file)) {
+                    imageMergeList.set(file, mimeTypeMap.get(file));
+                }
+            }
+            yield this.converImagesToTempPDF(imageMergeList, workDir, pdfCount, pdfMergeList);
+            //for each PDF, convert it to a buffer and add it to the list of buffers to be merged
+            let merger = new pdf_merger_js_1.default();
+            for (let pdf of pdfMergeList) {
+                var fileContent = fs_1.default.readFileSync(pdf);
+                merger.add(fileContent);
+            }
+            var bufferedFile = yield merger.saveAsBuffer();
+            fs_1.default.writeFileSync(outFile, bufferedFile);
+        });
+    }
+    convertFilesBufferInputPages(files, workDir, outFile) {
+        var _a;
+        return __awaiter(this, void 0, void 0, function* () {
+            let mimeTypeMap = new Map();
+            for (const file of files) {
+                let fileType = yield file_type_1.default.fromFile(file);
+                mimeTypeMap.set(file, (_a = fileType === null || fileType === void 0 ? void 0 : fileType.mime) !== null && _a !== void 0 ? _a : 'unknown');
+            }
+            for (const [file, mimeType] of mimeTypeMap) {
+                if (!this.validMimeTypes.includes(mimeType)) {
+                    throw new Error(`${file} is not a valid file type`);
+                }
+            }
+            //convert each file to PDF, it multiple images in a row, put them together in a single PDF
+            let imageMergeList = new Map();
+            let pdfMergeList = [];
+            let pdfCount = 0;
+            for (let file of files) {
+                if (mimeTypeMap.get(file) === this.pdfMimeType) { //once we encounter a PDF, we merge all prior Images into a single PDF
+                    yield this.converImagesToTempPDF(imageMergeList, workDir, pdfCount, pdfMergeList);
+                    pdfCount++;
+                    pdfMergeList.push(file);
+                }
+                else if (mimeTypeMap.get(file) === this.tiffMimeType) {
+                    let imageList = yield this.tiffToJpeg(file, workDir + '/converted_tiff_' + pdfCount);
+                    for (let image of imageList) {
+                        imageMergeList.set(image, 'image/jpeg');
+                    }
+                }
+                else if (mimeTypeMap.get(file)) {
+                    imageMergeList.set(file, mimeTypeMap.get(file));
+                }
+            }
+            yield this.converImagesToTempPDF(imageMergeList, workDir, pdfCount, pdfMergeList);
+            //for each PDF, convert it to a buffer and add it to the list of buffers to be merged
+            let merger = new pdf_merger_js_1.default();
+            for (let pdf of pdfMergeList) {
+                var fileContent = fs_1.default.readFileSync(pdf);
+                merger.add(fileContent, ['1']);
+            }
+            var bufferedFile = yield merger.saveAsBuffer();
+            fs_1.default.writeFileSync(outFile, bufferedFile);
         });
     }
     getImageDetails(file) {
@@ -187,11 +286,54 @@ class FilesToPdf {
                 for (let [file, mimeType] of imageMergeList) {
                     images.push(yield this.convertToImageDetails(file, mimeType));
                 }
-                console.log('images to convert', JSON.stringify(images.length));
                 yield (0, images_to_pdf_1.generatePdfFromImages)(images, pdfName);
                 pdfMergeList.push(pdfName);
                 imageMergeList.clear();
             }
+        });
+    }
+    convertFilesBlobInput1Page(files, arg1) {
+        return __awaiter(this, void 0, void 0, function* () {
+            // download the files
+            let downloadedFiles = [];
+            yield this.downloadBlobs(files, downloadedFiles);
+            // merge the files
+            const merger = new pdf_merger_js_1.default();
+            for (let file of downloadedFiles) {
+                merger.add(file.content, ['1']);
+            }
+            const mergedFile = yield merger.saveAsBuffer();
+            // save the file to local storage
+            fs_1.default.writeFileSync(arg1, mergedFile);
+        });
+    }
+    downloadBlobs(fileList, downloadedFiles) {
+        return __awaiter(this, void 0, void 0, function* () {
+            for (let file of fileList) {
+                let containerName = 'input-files';
+                let connectionString = "DefaultEndpointsProtocol=https;AccountName=salesforcestorageact;AccountKey=2der/NyZo9xKCwJAhDdwsAZ7mrUVUnp+qR/qkOgpfRhRxEe5GqTYyoq2o0T209wRLvvawa+lcGe6+AStqlQuoQ==;EndpointSuffix=core.windows.net";
+                // download file from blob storage
+                let blobServiceClient = storage_blob_1.default.BlobServiceClient.fromConnectionString(connectionString);
+                let containerClient = blobServiceClient.getContainerClient(containerName);
+                let blobClient = containerClient.getBlobClient(file.documentId);
+                // Get blob content from position 0 to the end
+                // In Node.js, get downloaded data by accessing downloadBlockBlobResponse.readableStreamBody
+                const downloadBlockBlobResponse = yield blobClient.download();
+                const downloaded = yield this.streamToBuffer(downloadBlockBlobResponse.readableStreamBody);
+                file.content = downloaded;
+                file.contentType = 'application/pdf'; //await FileType(downloaded as Buffer);
+                downloadedFiles.push(file);
+            }
+        });
+    }
+    streamToBuffer(readableStreamBody) {
+        return new Promise((resolve, reject) => {
+            const chunks = [];
+            readableStreamBody === null || readableStreamBody === void 0 ? void 0 : readableStreamBody.on("data", (data) => {
+                chunks.push(data instanceof Buffer ? data : Buffer.from(data));
+            });
+            readableStreamBody === null || readableStreamBody === void 0 ? void 0 : readableStreamBody.on("error", reject);
+            readableStreamBody === null || readableStreamBody === void 0 ? void 0 : readableStreamBody.on("end", () => resolve(Buffer.concat(chunks)));
         });
     }
 }
