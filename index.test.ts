@@ -67,6 +67,23 @@ test('Test3b: should merge buffer input epic 2 page pdfs from a given definition
     assert(true);
 })
 
+test('Test3b1: should merge buffer input epic 2 page pdfs from a given definition',async() => {
+    //arrange
+    let filesToPdf = new FilesToPdf();
+    let files = [
+            './test/sample-files/sample-set-1/408020 \'Carl Gustav Carus\' doc.tif',
+            './test/sample-files/sample-set-1/Sample Completed Verification Form.pdf',
+            './test/sample-files/sample-set-1/Sample EPIC Report_Final Medical Diploma.pdf',
+            './test/sample-files/sample-set-1/Physican Diploma Translation.JPG',
+            './test/sample-files/sample-set-1/Verified_Final_Medical_Diploma.pdf',
+            './test/sample-files/sample-set-1/sample 1.pdf'
+    ];
+    //act
+    await filesToPdf.convertFilesBufferInputLib(files, './test/temp', './test/temp/merged3b1.pdf');
+    //assert
+    assert(true);
+})
+
 test('Test3c: should merge buffer input internet 2 page pdfs from a given definition',async() => {
     //arrange
     let filesToPdf = new FilesToPdf();
