@@ -296,6 +296,22 @@ export class FilesToPdf {
         }
     }
 
+    // list files from blob storage by index tag
+    public async listBlobsByIndexTag(indexTagValue: string) {
+        const containerName = "test";
+        const blobServiceClient = BlobServiceClient.fromConnectionString("***REMOVED***");
+        const containerClient = blobServiceClient.getContainerClient(containerName);
+        let blobs = [];
+        //let indexTagKey = "applicantId";
+        // find blobs by tag
+        for await (const blob of containerClient.findBlobsByTags("applicantId='" + indexTagValue + "'")) {
+            var blobDetail = await containerClient.getBlobClient(blob.name).getProperties();
+            blobs.push({ name: blob.name, tags: blob.tags, metadata : blobDetail.metadata });
+        }
+
+        return blobs;
+    }
+
     public async convertFilesBufferInputLib(files: string[], workDir: string, outFile: string): Promise<void> {
         let mimeTypeMap = new Map<string, string>();
         for (const file of files) {
@@ -367,3 +383,4 @@ function streamToBuffer(readableStream: any) {
         readableStream.on("error", reject);
     });
 }
+
