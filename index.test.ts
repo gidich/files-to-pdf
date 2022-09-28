@@ -50,7 +50,7 @@ test('Test3a: should merge buffer input 1 page pdfs from a given definition',asy
     assert(true);
 })
 
-test('Test3b: should merge buffer input epic 2 page pdfs from a given definition',async() => {
+test.skip('Test3b: should merge buffer input epic 2 page pdfs from a given definition',async() => {
     //arrange
     let filesToPdf = new FilesToPdf();
     let files = [
@@ -137,4 +137,48 @@ test('Test6a: should merge blob buffer input internet 2 page [1] pdfs from a giv
     await filesToPdf.convertFilesBlobInput1Page(files, './test/temp/merged6a.pdf');
     //assert
     assert(true);
+})
+
+test('Test7a: List blobs by index tag', async() => {
+    //arrange
+    let indexTagValue = '105535';
+    let filesToPdf = new FilesToPdf();
+    //act
+    let blobs = await filesToPdf.listBlobsByIndexTag(indexTagValue);
+    console.log(blobs.length);
+    //assert
+    assert(blobs.length == 3);    
+})
+
+test('Test7c: List blobs by index tag 106636', async() => {
+    //arrange
+    let indexTagValue = '106636';
+    let filesToPdf = new FilesToPdf();
+    //act
+    let blobs = await filesToPdf.listBlobsByIndexTag(indexTagValue);
+    console.log(blobs.length);
+    //assert
+    assert(blobs.length == 2);    
+})
+
+test('Test7d: List blobs by index tag 107737', async() => {
+    //arrange
+    let indexTagValue = '107737';
+    let filesToPdf = new FilesToPdf();
+    //act
+    let blobs = await filesToPdf.listBlobsByIndexTag(indexTagValue);
+    console.log(blobs.length);
+    //assert
+    assert(blobs.length == 2);    
+})
+
+test('Test7b: List blobs by index tag 108838', async() => {
+    //arrange
+    let indexTagValue = '108838';
+    let filesToPdf = new FilesToPdf();
+    //act
+    let blobs = await filesToPdf.listBlobsByIndexTag(indexTagValue);
+    console.log(blobs.length);
+    //assert
+    assert(blobs.length == 1);    
 })
