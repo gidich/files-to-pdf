@@ -1,3 +1,4 @@
+import * as dotenv from 'dotenv';
 import FileType from 'file-type';
 import { generatePdfFromImages, ImageDetails } from './code/images-to-pdf';
 import { Image, ImageConstructorOptions } from 'image-js';
@@ -7,6 +8,9 @@ import fs from 'fs';
 import * as tiff from 'tiff';
 import { BlobServiceClient } from '@azure/storage-blob';
 import { PDFDocument } from 'pdf-lib'
+
+// Load environment variables
+dotenv.config();
 export class FilesToPdf {
     private readonly pdfMimeType = 'application/pdf';
     private readonly tiffMimeType = 'image/tiff';
@@ -279,10 +283,15 @@ export class FilesToPdf {
 
     // download the files in fileList array from blob storage and save them to the downloadedFiles array
     async downloadBlobs(fileList: string[], downloadedFiles: any[]) {
+        const connectionString = process.env.SALESFORCE_STORAGE_CONNECTION_STRING;
+        if (!connectionString) {
+            throw new Error('SALESFORCE_STORAGE_CONNECTION_STRING environment variable is not set');
+        }
+
         for (let blobName of fileList) {
             const containerName = "input-files";
             // download the file from azure blob storage
-            const blobServiceClient = BlobServiceClient.fromConnectionString("");
+            const blobServiceClient = BlobServiceClient.fromConnectionString(connectionString);
             const containerClient = blobServiceClient.getContainerClient(containerName);
             const blobClient = containerClient.getBlobClient(blobName);
 
@@ -298,8 +307,13 @@ export class FilesToPdf {
 
     // list files from blob storage by index tag
     public async listBlobsByIndexTag(indexTagValue: string) {
+        const connectionString = process.env.STORAGE_INDEX_POC_CONNECTION_STRING;
+        if (!connectionString) {
+            throw new Error('STORAGE_INDEX_POC_CONNECTION_STRING environment variable is not set');
+        }
+
         const containerName = "test";
-        const blobServiceClient = BlobServiceClient.fromConnectionString("");
+        const blobServiceClient = BlobServiceClient.fromConnectionString(connectionString);
         const containerClient = blobServiceClient.getContainerClient(containerName);
         let blobs = [];
         //let indexTagKey = "applicantId";

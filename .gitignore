@@ -1,5 +1,8 @@
 test/temp/**.*
 
+# Build output
+bin/
+
 # Logs
 logs
 *.log
@@ -104,3 +107,6 @@ dist
 
 # TernJS port file
 .tern-port
+
+# Environment variables
+.env
