@@ -110,3 +110,4 @@ dist
 
 # Environment variables
 .env
+local.settings.json
