@@ -282,7 +282,7 @@ export class FilesToPdf {
         for (let blobName of fileList) {
             const containerName = "input-files";
             // download the file from azure blob storage
-            const blobServiceClient = BlobServiceClient.fromConnectionString("***REMOVED***");
+            const blobServiceClient = BlobServiceClient.fromConnectionString("");
             const containerClient = blobServiceClient.getContainerClient(containerName);
             const blobClient = containerClient.getBlobClient(blobName);
 
@@ -299,7 +299,7 @@ export class FilesToPdf {
     // list files from blob storage by index tag
     public async listBlobsByIndexTag(indexTagValue: string) {
         const containerName = "test";
-        const blobServiceClient = BlobServiceClient.fromConnectionString("***REMOVED***");
+        const blobServiceClient = BlobServiceClient.fromConnectionString("");
         const containerClient = blobServiceClient.getContainerClient(containerName);
         let blobs = [];
         //let indexTagKey = "applicantId";
@@ -369,6 +369,34 @@ export class FilesToPdf {
         fs.writeFileSync(outFile, pdfBytes);
     }
 
+    // merge pdfs using pdf-lib with ignoreEncryption: true
+    public async mergePDFsUsingPdfLib(files: string[], workDir: string, outFile: string): Promise<void> {
+        const mergedDoc = await PDFDocument.create();
+        // set ignoreEncryption to true to skip password prompt
+        const options = { ignoreEncryption: true };
+
+        for(let file of files) {
+            var buffer = fs.readFileSync(file);
+
+            const doc = await PDFDocument.load(buffer, options)
+            // check if the doc is encrypted
+            if (doc.isEncrypted) {
+                // decrypt the doc
+                //await doc.decrypt(options);
+                console.log('PDF is encrypted');
+            } else {
+                const pages = await mergedDoc.copyPages(doc, doc.getPageIndices());
+                pages.forEach((page) => {
+                mergedDoc.addPage(page)
+                });
+            }
+        }
+        // Serialize the PDFDocument to bytes (a Uint8Array)
+        const pdfBytes = await mergedDoc.save()
+
+        // Write the PDF to a file
+        fs.writeFileSync(outFile, pdfBytes);
+    }
 }
 
 function streamToBuffer(readableStream: any) {

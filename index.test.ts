@@ -84,6 +84,37 @@ test('Test3b1: should merge buffer input epic 2 page pdfs from a given definitio
     assert(true);
 })
 
+test('Test3b1-prod: should merge buffer input epic 2 page pdfs from a given definition',async() => {
+    //arrange
+    let filesToPdf = new FilesToPdf();
+    let files = [
+            './test/sample-files/sample-set-1/e198fa84-525c-4c4c-b6de-1b642c9c9c29.tiff',
+            './test/sample-files/sample-set-1/Sample Completed Verification Form.pdf',
+            './test/sample-files/sample-set-1/Sample EPIC Report_Final Medical Diploma.pdf',
+            './test/sample-files/sample-set-1/Physican Diploma Translation.JPG',
+            './test/sample-files/sample-set-1/Verified_Final_Medical_Diploma.pdf',
+            './test/sample-files/sample-set-1/sample 1.pdf'
+    ];
+    //act
+    await filesToPdf.convertFilesBufferInputLib(files, './test/temp', './test/temp/merged3b1-prod.pdf');
+    //assert
+    assert(true);
+})
+
+test('Test3b11: should merge buffer input epic 3 page pdfs from a given definition',async() => {
+    //arrange
+    let filesToPdf = new FilesToPdf();
+    let files = [
+        './test/sample-files/sample-set-1/0034C00000eRqxlQAC_5004C00000EslOIQAZ_EPIC_Report_Page_2023-2-15_18_40_9.pdf',
+        './test/sample-files/sample-set-1/0034C00000eRqxlQAC_Alternate_Graduation_Document_2023-02-08_13_36_00.pdf',
+        './test/sample-files/sample-set-1/0034C00000eRqxlQAC_TranslationDocUpload_2023-02-08_13_37_24.pdf'
+];
+    //act
+    await filesToPdf.mergePDFsUsingPdfLib(files, './test/temp', './test/temp/merged3b11.pdf');
+    //assert
+    assert(true);
+})
+
 test('Test3c: should merge buffer input internet 2 page pdfs from a given definition',async() => {
     //arrange
     let filesToPdf = new FilesToPdf();
